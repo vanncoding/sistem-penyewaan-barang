@@ -6,7 +6,7 @@ inventory = [
     {'id': 1, 'nama': 'Toyota Avanza', 'harga': 300000, 'tersedia': True},
     {'id': 2, 'nama': 'Honda Brio',    'harga': 250000, 'tersedia': True},
     {'id': 3, 'nama': 'Toyota Innova', 'harga': 500000, 'tersedia': True},
-    {'id': 4, 'nama': 'Mitsubishi Pajero', 'harga': 800000, 'tersedia': False}, # Contoh sedang disewa
+    {'id': 4, 'nama': 'Mitsubishi Pajero', 'harga': 800000, 'tersedia': True}, # Contoh sedang disewa
     {'id': 5, 'nama': 'Mazda CX3', 'harga': 700000, 'tersedia': True},
     {'id': 6, 'nama': 'Daihatsu Sigra', 'harga': 200000, 'tersedia': True},
     {'id': 7, 'nama': 'Toyota Agya', 'harga': 160000, 'tersedia': True},
@@ -113,11 +113,11 @@ def lihat_riwayat():
     else:
         # header tabel
         # nanti coba yg tabel gtu di ganti pke pandas
-        print(f"{'No':<5} {'Tanggal':<18} {'Penyewa':<15} {'Mobil':<15} {'Total (Rp)'}")
+        print(f"{'No':<5} {'Tanggal':<18} {'Penyewa':<15} {'Mobil':<15} {'Hari':<15} {'Total (Rp)'}")
         print("-" * 65)
         
         for trx in riwayat_transaksi:
-            print(f"#{trx['no_trx']:<4} {trx['tanggal']:<18} {trx['penyewa']:<15} {trx['mobil']:<15} {trx['total']:,}")
+            print(f"#{trx['no_trx']:<4} {trx['tanggal']:<18} {trx['penyewa']:<15} {trx['mobil']:<15} {trx['lama']:<15} {trx['total']:,}")
         print("-" * 65)
 
 def kembalikan_kendaraan():
