@@ -1,12 +1,16 @@
 import os
 import datetime
 import pandas as pd
+import modul
+
+#tugas zuqy (buat modul buat import)
+#isi modul nya (1. modul garis, 2. modul variabel diskon)
 
 inventory = [
     {'id': 1, 'nama': 'Toyota Avanza', 'harga': 300000, 'tersedia': True},
     {'id': 2, 'nama': 'Honda Brio',    'harga': 250000, 'tersedia': True},
     {'id': 3, 'nama': 'Toyota Innova', 'harga': 500000, 'tersedia': True},
-    {'id': 4, 'nama': 'Mitsubishi Pajero', 'harga': 800000, 'tersedia': True}, # Contoh sedang disewa
+    {'id': 4, 'nama': 'Mitsubishi Pajero', 'harga': 800000, 'tersedia': True},
     {'id': 5, 'nama': 'Mazda CX3', 'harga': 700000, 'tersedia': True},
     {'id': 6, 'nama': 'Daihatsu Sigra', 'harga': 200000, 'tersedia': True},
     {'id': 7, 'nama': 'Toyota Agya', 'harga': 160000, 'tersedia': True},
@@ -21,6 +25,7 @@ def clear_screen():
     """Membersihkan layar terminal agar rapi"""
     os.system('cls' if os.name == 'nt' else 'clear')
 
+#ini tugas dapa/ismet (ubah tabel pakai pandas)
 def tampilkan_kendaraan():
     """Menampilkan semua kendaraan dalam bentuk tabel (Coba bagian ini bisa pke pandas ga ya?)"""
     print("\n=== DAFTAR KENDARAAN ===")
@@ -36,7 +41,7 @@ def tampilkan_kendaraan():
     print("-" * 55)
 
 
-
+#ini tugas revan (munculin qris sebelum verifikasi, abis muncul qris muncul format konfirmasi kirim email, setelah kirim email muncul konfirmasi)
 def sewa_kendaraan():
     """Logika sewa dengan form pembayaran dan struk"""
     tampilkan_kendaraan()
@@ -120,6 +125,7 @@ def lihat_riwayat():
             print(f"#{trx['no_trx']:<4} {trx['tanggal']:<18} {trx['penyewa']:<15} {trx['mobil']:<15} {trx['lama']:<15} {trx['total']:,}")
         print("-" * 65)
 
+#ini tugas fathir (ubah pengembalian)
 def kembalikan_kendaraan():
     """Logika pengembalian dan perhitungan biaya"""
     lihat_riwayat()
