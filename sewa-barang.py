@@ -2,6 +2,7 @@ import os
 import datetime
 import pandas as pd
 import modul
+from diskon_service import hitung_diskon
 
 #tugas zuqy (buat modul buat import)
 #isi modul nya (1. modul garis, 2. modul variabel diskon)
@@ -58,9 +59,16 @@ def sewa_kendaraan():
                     # 1. input data penyewa
                     nama_penyewa = input("Nama Penyewa      : ")
                     lama_sewa = int(input("Lama Sewa (hari)  : "))
-                    # 2. hitung biaya
-                    total_biaya = mobil['harga'] * lama_sewa
-                    print(f"Total Biaya       : Rp {total_biaya:,}")
+                   # 2. hitung biaya awal
+                    biaya_dasar = mobil['harga'] * lama_sewa
+                    
+                    # HITUNG DISKON MENGGUNAKAN MODUL
+                    potongan, persen = hitung_diskon(biaya_dasar, lama_sewa)
+                    total_biaya = biaya_dasar - potongan
+
+                    print(f"Harga Dasar     : Rp {biaya_dasar:,}")
+                    print(f"Diskon ({persen}%): -Rp {potongan:,}")
+                    print(f"Total Bayar      : Rp {total_biaya:,}")
                     # 3. konfirmasi pembayaran
                     # tar disini tambah munculin gambar qris
                     konfirmasi = input("Konfirmasi pembayaran? (y/n): ").lower()
