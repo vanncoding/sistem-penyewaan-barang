@@ -66,9 +66,9 @@ def sewa_kendaraan():
                     potongan, persen = hitung_diskon(biaya_dasar, lama_sewa)
                     total_biaya = biaya_dasar - potongan
 
-                    print(f"Harga Dasar     : Rp {biaya_dasar:,}")
-                    print(f"Diskon ({persen}%): -Rp {potongan:,}")
-                    print(f"Total Bayar      : Rp {total_biaya:,}")
+                    print(f"Harga Dasar       : Rp {biaya_dasar:,}")
+                    print(f"Diskon ({persen}%)    : -Rp {potongan:,}")
+                    print(f"Total Bayar       : Rp {total_biaya:,}")
                     # 3. konfirmasi pembayaran
                     # tar disini tambah munculin gambar qris
                     konfirmasi = input("Konfirmasi pembayaran? (y/n): ").lower()
