@@ -30,16 +30,20 @@ def clear_screen():
 def tampilkan_kendaraan():
     """Menampilkan semua kendaraan dalam bentuk tabel (Coba bagian ini bisa pke pandas ga ya?)"""
     print("\n=== DAFTAR KENDARAAN ===")
-    print(f"{'ID':<5} {'Nama Kendaraan':<20} {'Harga/Hari':<15} {'Status'}")
+
+    df = pd.DataFrame(inventory)
+
+    df['status'] = df ['tersedia'].apply(lambda x: 'tersedia' if x else 'sedang disewa')
+
+    df['Harga/Hari'] = df['harga'].apply(lambda x: f"Rp {x:,}")
+
+    df_tampil = df[['id','nama','Harga/Hari','status']]
+    df_tampil.columns = ['ID','Nama Kendaraan', 'Harga/Hari', 'Status']
+
+    print(df_tampil.to_string(index=False))  
     print("-" * 55)
     
-    for mobil in inventory:
-        status = "Tersedia" if mobil['tersedia'] else "Sedang Disewa"
-        # Format harga dengan pemisah ribuan (contoh: 300,000)
-        print(f"{mobil['id']:<5} {mobil['nama']:<20} Rp {mobil['harga']:<12} {status}")
-        # df = pd.DataFrame(inventory)
-        # print(df)
-    print("-" * 55)
+    
 
 
 #ini tugas revan (munculin qris sebelum verifikasi, abis muncul qris muncul format konfirmasi kirim email, setelah kirim email muncul konfirmasi)
