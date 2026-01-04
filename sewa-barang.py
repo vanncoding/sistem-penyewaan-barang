@@ -1,12 +1,17 @@
 import os
 import datetime
 import pandas as pd
+import modul
+from diskon_service import hitung_diskon
+
+#tugas zuqy (buat modul buat import)
+#isi modul nya (1. modul garis, 2. modul variabel diskon)
 
 inventory = [
     {'id': 1, 'nama': 'Toyota Avanza', 'harga': 300000, 'tersedia': True},
     {'id': 2, 'nama': 'Honda Brio',    'harga': 250000, 'tersedia': True},
     {'id': 3, 'nama': 'Toyota Innova', 'harga': 500000, 'tersedia': True},
-    {'id': 4, 'nama': 'Mitsubishi Pajero', 'harga': 800000, 'tersedia': True}, # Contoh sedang disewa
+    {'id': 4, 'nama': 'Mitsubishi Pajero', 'harga': 800000, 'tersedia': True},
     {'id': 5, 'nama': 'Mazda CX3', 'harga': 700000, 'tersedia': True},
     {'id': 6, 'nama': 'Daihatsu Sigra', 'harga': 200000, 'tersedia': True},
     {'id': 7, 'nama': 'Toyota Agya', 'harga': 160000, 'tersedia': True},
@@ -21,6 +26,7 @@ def clear_screen():
     """Membersihkan layar terminal agar rapi"""
     os.system('cls' if os.name == 'nt' else 'clear')
 
+#ini tugas dapa/ismet (ubah tabel pakai pandas)
 def tampilkan_kendaraan():
     """Menampilkan semua kendaraan dalam bentuk tabel (Coba bagian ini bisa pke pandas ga ya?)"""
     print("\n=== DAFTAR KENDARAAN ===")
@@ -40,7 +46,7 @@ def tampilkan_kendaraan():
     
 
 
-
+#ini tugas revan (munculin qris sebelum verifikasi, abis muncul qris muncul format konfirmasi kirim email, setelah kirim email muncul konfirmasi)
 def sewa_kendaraan():
     """Logika sewa dengan form pembayaran dan struk"""
     tampilkan_kendaraan()
@@ -57,9 +63,16 @@ def sewa_kendaraan():
                     # 1. input data penyewa
                     nama_penyewa = input("Nama Penyewa      : ")
                     lama_sewa = int(input("Lama Sewa (hari)  : "))
-                    # 2. hitung biaya
-                    total_biaya = mobil['harga'] * lama_sewa
-                    print(f"Total Biaya       : Rp {total_biaya:,}")
+                   # 2. hitung biaya awal
+                    biaya_dasar = mobil['harga'] * lama_sewa
+                    
+                    # HITUNG DISKON MENGGUNAKAN MODUL
+                    potongan, persen = hitung_diskon(biaya_dasar, lama_sewa)
+                    total_biaya = biaya_dasar - potongan
+
+                    print(f"Harga Dasar     : Rp {biaya_dasar:,}")
+                    print(f"Diskon ({persen}%): -Rp {potongan:,}")
+                    print(f"Total Bayar      : Rp {total_biaya:,}")
                     # 3. konfirmasi pembayaran
                     # tar disini tambah munculin gambar qris
                     konfirmasi = input("Konfirmasi pembayaran? (y/n): ").lower()
@@ -75,8 +88,10 @@ def sewa_kendaraan():
                             'tanggal': datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
                             'penyewa': nama_penyewa,
                             'mobil': mobil['nama'],
+                            'id_mobil': mobil['id'], #tambah id mobil
                             'lama': lama_sewa,
-                            'total': total_biaya
+                            'total': total_biaya,
+                            'status_rental': 'aktif' #penanda mobil masih di sewa
                         }
 
                         # 5. simpan ke list riwayat
@@ -90,6 +105,7 @@ def sewa_kendaraan():
                         print(f"Tanggal      : {struk['tanggal']}")
                         print(f"Penyewa      : {struk['penyewa']}")
                         print(f"Kendaraan    : {struk['mobil']}")
+                        print(f"Kendaraan    : {struk['id_mobil']}")
                         print(f"Durasi       : {struk['lama']} Hari")
                         print("-" * 40)
                         print(f"TOTAL BAYAR  : Rp {struk['total']:,}")
@@ -117,47 +133,104 @@ def lihat_riwayat():
     else:
         # header tabel
         # nanti coba yg tabel gtu di ganti pke pandas
-        print(f"{'No':<5} {'Tanggal':<18} {'Penyewa':<15} {'Mobil':<15} {'Hari':<15} {'Total (Rp)'}")
-        print("-" * 65)
+        print(f"{'No':<5} {'Tanggal':<18} {'Penyewa':<15} {'Mobil':<15} {'ID Mobil':<15} {'Hari':<15} {'Total (Rp)':<15} {'Status'}")
+        print("-" * 85)
         
         for trx in riwayat_transaksi:
-            print(f"#{trx['no_trx']:<4} {trx['tanggal']:<18} {trx['penyewa']:<15} {trx['mobil']:<15} {trx['lama']:<15} {trx['total']:,}")
-        print("-" * 65)
+            print(f"#{trx['no_trx']:<4} {trx['tanggal']:<18} {trx['penyewa']:<15} {trx['mobil']:<15} {trx['id_mobil']:<15} {trx['lama']:<15} {trx['total']:<15} {trx['status_rental']}")
+        print("-" * 85)
 
+#ini tugas fathir (ubah pengembalian)
 def kembalikan_kendaraan():
-    """Logika pengembalian dan perhitungan biaya"""
-    lihat_riwayat()
     print("\n=== PENGEMBALIAN KENDARAAN ===")
+    # 1. Tampilkan mobil yang sedang disewa saja untuk memudahkan
+    print(f"{'ID':<5} {'Nama Kendaraan':<20} {'Status'}")
+    print("-" * 40)
+    for m in inventory:
+        if not m['tersedia']: # Hanya tampilkan yang sedang disewa
+            print(f"{m['id']:<5} {m['nama']:<20} Sedang Disewa")
+    print("-" * 40)
+    
     try:
+        # INPUT ID KENDARAAN
         id_kembali = int(input("Masukkan ID kendaraan yang dikembalikan: "))
         
-        ditemukan = False
+        # Cari data kendaraan
+        mobil_target = None
         for mobil in inventory:
             if mobil['id'] == id_kembali:
-                ditemukan = True
-                if not mobil['tersedia']: # Jika statusnya False (Sedang disewa)
-                    lama = int(input("Berapa hari mobil disewa? "))
-                    total_biaya = mobil['harga'] * lama
-                    
-                    # Reset status menjadi tersedia
-                    mobil['tersedia'] = True
-                    
-                    print("\n" + "="*30)
-                    print(f"Detail Pembayaran")
-                    print(f"Kendaraan  : {mobil['nama']}")
-                    print(f"Lama Sewa  : {lama} hari")
-                    print(f"Total Biaya: Rp {total_biaya:,}")
-                    print("="*30)
-                    print("[INFO] Kendaraan telah dikembalikan ke garasi.")
-                else:
-                    print("\n[INFO] Mobil ini memang sedang tersedia di garasi (belum disewa).")
+                mobil_target = mobil
                 break
         
-        if not ditemukan:
-            print("\n[ERROR] ID kendaraan tidak ditemukan.")
+        if not mobil_target:
+            print("[ERROR] ID Kendaraan tidak ditemukan.")
+            return
+
+        # Cek apakah mobil memang sedang disewa
+        if mobil_target['tersedia']:
+            print("[INFO] Mobil ini statusnya masih tersedia di garasi (belum disewa).")
+            return
+
+        # --- LOGIKA OTOMATIS MENCARI DATA TRANSAKSI ---
+        # cari di riwayat Transaksi yang id mobilnya cocok dan statusnya masih 'aktif'
+        transaksi_aktif = None
+        for trx in riwayat_transaksi:
+            if trx['id_mobil'] == id_kembali and trx['status_rental'] == 'aktif':
+                transaksi_aktif = trx
+                break
+        
+        if not transaksi_aktif:
+            print("[ERROR] Data transaksi aktif tidak ditemukan (Mungkin sistem error).")
+            return
+
+        # --- TAMPILKAN DATA SEWA ---
+        print("\n" + "="*40)
+        print("DATA PENYEWA DITEMUKAN")
+        print("="*40)
+        print(f"Penyewa       : {transaksi_aktif['penyewa']}")
+        print(f"Kendaraan     : {transaksi_aktif['mobil']}")
+        print(f"Lama Sewa     : {transaksi_aktif['lama']} hari")
+        print(f"Total Awal    : Rp {transaksi_aktif['total']:,}")
+        print("-" * 40)
+
+        # --- INPUT KETERLAMBATAN & HITUNG DENDA ---
+        telat = int(input("Keterlambatan (hari, tulis 0 jika tepat waktu): "))
+        
+        denda = 0
+        if telat > 0:
+            # Denda 10% dari total biaya per hari telat
+            denda_per_hari = 0.10 * transaksi_aktif['total']
+            denda = denda_per_hari * telat
+            print(f"\n[INFO] Terlambat {telat} hari.")
+            print(f"Denda (10% x Total x Hari): Rp {denda:,.0f}")
+        else:
+            print("\n[INFO] Pengembalian tepat waktu. Tidak ada denda.")
+
+        total_akhir = transaksi_aktif['total'] + denda
+
+        print("=" * 40)
+        print(f"TOTAL YANG HARUS DIBAYAR: Rp {total_akhir:,.0f}")
+        print("=" * 40)
+
+        # --- KONFIRMASI AKHIR ---
+        konfirmasi = input("\nProses pengembalian & pembayaran? (y/n): ").lower()
+        
+        if konfirmasi == 'y':
+            # 1. Update status mobil jadi tersedia
+            mobil_target['tersedia'] = True
+            
+            # 2. Update status transaksi jadi selesai (biar tidak muncul lagi nanti)
+            transaksi_aktif['status_rental'] = 'selesai'
+            # Kita juga bisa simpan info denda ke riwayat jika mau
+            transaksi_aktif['denda_akhir'] = denda
+            transaksi_aktif['total_akhir'] = total_akhir
+            
+            print("\n[SUKSES] Mobil telah dikembalikan dan status menjadi TERSEDIA.")
+        else:
+            print("\n[BATAL] Pengembalian dibatalkan.")
 
     except ValueError:
-        print("\n[ERROR] Masukkan input angka yang valid!")
+        print("\n[ERROR] Masukkan angka yang valid!")
 
 def main():
     while True:
