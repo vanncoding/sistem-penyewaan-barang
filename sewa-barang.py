@@ -3,6 +3,7 @@ import datetime
 import pandas as pd
 import modul
 from diskon_service import hitung_diskon
+from PIL import Image
 
 #tugas zuqy (buat modul buat import)
 #isi modul nya (1. modul garis, 2. modul variabel diskon)
@@ -47,6 +48,10 @@ def tampilkan_kendaraan():
 
 
 #ini tugas revan (munculin qris sebelum verifikasi, abis muncul qris muncul format konfirmasi kirim email, setelah kirim email muncul konfirmasi)
+def tampilkan_link_dan_buka(text, url):
+    """nampilin link"""
+    print(f"\n{text}")
+    print(f"Link: {url}")
 def sewa_kendaraan():
     """Logika sewa dengan form pembayaran dan struk"""
     tampilkan_kendaraan()
@@ -70,11 +75,74 @@ def sewa_kendaraan():
                     potongan, persen = hitung_diskon(biaya_dasar, lama_sewa)
                     total_biaya = biaya_dasar - potongan
 
+<<<<<<< HEAD
                     print(f"Harga Dasar       : Rp {biaya_dasar:,}")
                     print(f"Diskon ({persen}%)    : -Rp {potongan:,}")
                     print(f"Total Bayar       : Rp {total_biaya:,}")
+=======
+                    print(f"Harga Dasar     : Rp {biaya_dasar:,}")
+                    print(f"Diskon ({persen}%): -Rp {potongan:,}")
+                    print(f"Total Bayar      : Rp {total_biaya:,}")
+
+                    #tambahin qris nih disini
+                    input("\nSetelah Muncul Qris Silahkan Bayar Sesuai Nominal💸💰!!! \nTekan Tombol Enter Untuk Bayar..... !!")
+
+                    try :
+                        qris = r"C:\Users\VANN\Desktop\belajar python\sistem-penyewaan-barang\qris.jpg"
+                        img=Image.open(qris)
+                        img.show()
+                        print("\nQris Berhasil Ditampilkan✅\nSilahkan ScreenShot Bukti Pembayaran📷💰 dan Isi Form di WhatsApp✍ 💌")
+                    except FileNotFoundError:
+                        print(f"❌ ERROR : File {qris}\n Tidak Ditemukan!!")
+                    except Exception as e :
+                        print(f"ERROR : {e}")
+                    
+                    #disini buat otomatis ngisi form di wa gezzzz
+                    # 🆕 OTOMATIS ISI FORM WHATSAPP
+                    print("\n" + "="*60)
+                    print("📱 KIRIM BUKTI PEMBAYARAN VIA WHATSAPP")
+                    print("="*60)
+                    
+                    input("\nTekan ENTER untuk membuka WhatsApp dan isi form konfirmasi...")
+                    
+                    # Buat pesan WhatsApp otomatis
+                    nomor_wa = "6285773840478"  
+                    
+                    pesan = f"""Halo Admin Rental Mobil! 
+
+Saya ingin mengkonfirmasi pembayaran sewa kendaraan:
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+ DATA TRANSAKSI
+━━━━━━━━━━━━━━━━━━━━━━━━
+ Nama Penyewa    : {nama_penyewa}
+ Kendaraan       : {mobil['nama']}
+ ID Kendaraan    : {mobil['id']}
+ Lama Sewa       : {lama_sewa} Hari
+ Total Bayar     : Rp {total_biaya:,}
+ Tanggal Booking : {datetime.datetime.now().strftime("%d %B %Y, %H:%M")}
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Mohon cek pembayaran saya dan konfirmasi booking. Terima kasih! 🙏"""
+                    
+                    # pesan buat URL
+                    import urllib.parse
+                    pesan_encoded = urllib.parse.quote(pesan)
+                    
+                    # Buat link WhatsApp
+                    wa_link = f"https://wa.me/{nomor_wa}?text={pesan_encoded}"
+                    
+                    # Buka WhatsApp otomatis
+                    import webbrowser
+                    print("\n🌐 Membuka WhatsApp...")
+                    webbrowser.open(wa_link)
+                    print("✓ WhatsApp berhasil dibuka!")
+                    print("\n📸 Jangan lupa kirim screenshot bukti pembayaran!")
+                    
+                    print("="*60)
+
+>>>>>>> 17bdd71eec172d9703843d84e8ef9181057f1cfb
                     # 3. konfirmasi pembayaran
-                    # tar disini tambah munculin gambar qris
                     konfirmasi = input("Konfirmasi pembayaran? (y/n): ").lower()
                     
                     if konfirmasi == 'y':
@@ -234,8 +302,10 @@ def kembalikan_kendaraan():
 
 def main():
     while True:
-        print("\n" + "="*25)
-        print(" SISTEM RENTAL MOBIL")
+        print ()
+        print("𝐖𝐄𝐋𝐂𝐎𝐌𝐄")
+        print("="*25)
+        print("SISTEM RENTAL MOBIL")
         print("="*25)
         print("1. Lihat Daftar Kendaraan")
         print("2. Sewa Kendaraan")
