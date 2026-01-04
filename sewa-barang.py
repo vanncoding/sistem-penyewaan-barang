@@ -30,7 +30,7 @@ def clear_screen():
 
 #ini tugas dapa/ismet (ubah tabel pakai pandas)
 def tampilkan_kendaraan():
-    """Menampilkan semua kendaraan dalam bentuk tabel (Coba bagian ini bisa pke pandas ga ya?)"""
+    """Menampilkan semua kendaraan dalam bentuk tabel"""
     print("\n=== DAFTAR KENDARAAN ===")
 
     df = pd.DataFrame(inventory)
@@ -55,7 +55,7 @@ def tampilkan_link_dan_buka(text, url):
     print(f"Link: {url}")
 
 def sewa_kendaraan():
-    """Logika sewa dengan form pembayaran dan struk"""
+    """logika sewa kendaraan"""
     tampilkan_kendaraan()
     try:
         id_sewa = int(input("\nMasukkan ID kendaraan yang ingin disewa: "))
@@ -182,20 +182,20 @@ Mohon cek pembayaran saya dan konfirmasi booking. Terima kasih! 🙏"""
                         print("[SUKSES] Transaksi berhasil disimpan! ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧")
                         
                     else:
-                        print("[BATAL] Pembayaran dibatalkan.")
+                        print("[❌  BATAL] Pembayaran dibatalkan.")
                 
                 else:
-                    print(f"\n[GAGAL] Maaf, {mobil['nama']} sedang disewa orang lain.")
+                    print(f"\n[❌  GAGAL] Maaf, {mobil['nama']} sedang disewa orang lain.")
                 break
         
         if not ditemukan:
-            print("\n[ERROR] ID kendaraan tidak ditemukan.")
+            print("\n[⚠️  ERROR] ID kendaraan tidak ditemukan.")
             
     except ValueError:
-        print("\n[ERROR] Input tidak valid (pastikan angka dimasukkan dengan benar)!")
+        print("\n[⚠️  ERROR] Input tidak valid (pastikan angka dimasukkan dengan benar)!")
 
 def lihat_riwayat():
-    """Menampilkan daftar riwayat transaksi dengan Pandas + Tabulate"""
+    """Menampilkan daftar riwayat transaksi"""
     print("\n=== RIWAYAT TRANSAKSI ===")
     
     if not riwayat_transaksi:
@@ -226,6 +226,7 @@ def lihat_riwayat():
 
 #ini tugas fathir (ubah pengembalian)
 def kembalikan_kendaraan():
+    """Logika pengembalian kendaraan"""
     print("\n=== PENGEMBALIAN KENDARAAN ===")
     # 1. Buat DataFrame dari inventory
     df = pd.DataFrame(inventory)
@@ -235,7 +236,7 @@ def kembalikan_kendaraan():
     
     # Cek jika tidak ada yang disewa
     if df_sewa.empty:
-        print("[INFO] Tidak ada mobil yang sedang disewa saat ini.")
+        print("[📌 INFO] Tidak ada mobil yang sedang disewa saat ini.")
         return
     
     # 3. Tambahkan kolom status teks manual (opsional, biar jelas)
@@ -262,12 +263,12 @@ def kembalikan_kendaraan():
                 break
         
         if not mobil_target:
-            print("[ERROR] ID Kendaraan tidak ditemukan.")
+            print("[⚠️  ERROR] ID Kendaraan tidak ditemukan.")
             return
 
         # Cek apakah mobil memang sedang disewa
         if mobil_target['tersedia']:
-            print("[INFO] Mobil ini statusnya masih tersedia di garasi (belum disewa).")
+            print("[📌 INFO] Mobil ini statusnya masih tersedia di garasi (belum disewa).")
             return
 
         # --- LOGIKA OTOMATIS MENCARI DATA TRANSAKSI ---
@@ -279,7 +280,7 @@ def kembalikan_kendaraan():
                 break
         
         if not transaksi_aktif:
-            print("[ERROR] Data transaksi aktif tidak ditemukan (Mungkin sistem error).")
+            print("[⚠️  ERROR] Data transaksi aktif tidak ditemukan (Mungkin sistem error).")
             return
 
         # --- TAMPILKAN DATA SEWA ---
@@ -300,10 +301,10 @@ def kembalikan_kendaraan():
             # Denda 10% dari total biaya per hari telat
             denda_per_hari = 0.10 * transaksi_aktif['total']
             denda = denda_per_hari * telat
-            print(f"\n[INFO] Terlambat {telat} hari.")
+            print(f"\n[📌 INFO] Terlambat {telat} hari.")
             print(f"Denda (10% x Total x Hari): Rp {denda:,.0f}")
         else:
-            print("\n[INFO] Pengembalian tepat waktu. Tidak ada denda.")
+            print("\n[📌 INFO] Pengembalian tepat waktu. Tidak ada denda.")
 
         total_akhir = transaksi_aktif['total'] + denda
 
@@ -324,14 +325,15 @@ def kembalikan_kendaraan():
             transaksi_aktif['denda_akhir'] = denda
             transaksi_aktif['total_akhir'] = total_akhir
             
-            print("\n[SUKSES] Mobil telah dikembalikan dan status menjadi TERSEDIA. ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧")
+            print("\n[✅  SUKSES] Mobil telah dikembalikan dan status menjadi TERSEDIA. ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧")
         else:
-            print("\n[BATAL] Pengembalian dibatalkan.")
+            print("\n[❌  BATAL] Pengembalian dibatalkan.")
 
     except ValueError:
-        print("\n[ERROR] Masukkan angka yang valid!")
+        print("\n[⚠️  ERROR] Masukkan angka yang valid!")
 
 def main():
+    """Menampilkan menu utama"""
     while True:
         print ()
         print(" ✨ Welcome ✨ ")
@@ -363,7 +365,7 @@ def main():
             break
         else:
             clear_screen()
-            print("\n⚠︎ Pilihan tidak valid, silakan coba lagi.")
+            print("\n⚠️  Pilihan tidak valid, silakan coba lagi.")
 
 
 main()
