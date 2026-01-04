@@ -20,3 +20,4 @@ class Garis:
 
     def info_garis(self):
         return f"Garis dari ({self.x1},{self.y1}) ke ({self.x2},{self.y2})"
+    
