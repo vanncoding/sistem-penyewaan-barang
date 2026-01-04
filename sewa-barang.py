@@ -4,6 +4,7 @@ import pandas as pd
 import modul
 from diskon_service import hitung_diskon
 from PIL import Image
+from tabulate import tabulate
 
 #tugas zuqy (buat modul buat import)
 #isi modul nya (1. modul garis, 2. modul variabel diskon)
@@ -35,13 +36,13 @@ def tampilkan_kendaraan():
     df = pd.DataFrame(inventory)
 
     df['status'] = df ['tersedia'].apply(lambda x: 'tersedia' if x else 'sedang disewa')
-
     df['Harga/Hari'] = df['harga'].apply(lambda x: f"Rp {x:,}")
 
     df_tampil = df[['id','nama','Harga/Hari','status']]
     df_tampil.columns = ['ID','Nama Kendaraan', 'Harga/Hari', 'Status']
+  
+    print(tabulate(df_tampil, headers='keys', tablefmt='fancy_grid', showindex=False, stralign="left"))
 
-    print(df_tampil.to_string(index=False))  
     print("-" * 55)
     
     
@@ -52,6 +53,7 @@ def tampilkan_link_dan_buka(text, url):
     """nampilin link"""
     print(f"\n{text}")
     print(f"Link: {url}")
+
 def sewa_kendaraan():
     """Logika sewa dengan form pembayaran dan struk"""
     tampilkan_kendaraan()
@@ -75,25 +77,23 @@ def sewa_kendaraan():
                     potongan, persen = hitung_diskon(biaya_dasar, lama_sewa)
                     total_biaya = biaya_dasar - potongan
 
-<<<<<<< HEAD
                     print(f"Harga Dasar       : Rp {biaya_dasar:,}")
                     print(f"Diskon ({persen}%)    : -Rp {potongan:,}")
                     print(f"Total Bayar       : Rp {total_biaya:,}")
-=======
-                    print(f"Harga Dasar     : Rp {biaya_dasar:,}")
-                    print(f"Diskon ({persen}%): -Rp {potongan:,}")
-                    print(f"Total Bayar      : Rp {total_biaya:,}")
 
                     #tambahin qris nih disini
                     input("\nSetelah Muncul Qris Silahkan Bayar Sesuai Nominal💸💰!!! \nTekan Tombol Enter Untuk Bayar..... !!")
 
                     try :
-                        qris = r"C:\Users\VANN\Desktop\belajar python\sistem-penyewaan-barang\qris.jpg"
-                        img=Image.open(qris)
+                        folder_qris = os.path.dirname(os.path.abspath(__file__))
+                        gambar_qris = os.path.join(folder_qris, "qris.jpg")
+
+                        img=Image.open(gambar_qris)
                         img.show()
+
                         print("\nQris Berhasil Ditampilkan✅\nSilahkan ScreenShot Bukti Pembayaran📷💰 dan Isi Form di WhatsApp✍ 💌")
                     except FileNotFoundError:
-                        print(f"❌ ERROR : File {qris}\n Tidak Ditemukan!!")
+                        print(f"❌ ERROR : File Gambar QRIS\n Tidak Ditemukan!!")
                     except Exception as e :
                         print(f"ERROR : {e}")
                     
@@ -141,7 +141,6 @@ Mohon cek pembayaran saya dan konfirmasi booking. Terima kasih! 🙏"""
                     
                     print("="*60)
 
->>>>>>> 17bdd71eec172d9703843d84e8ef9181057f1cfb
                     # 3. konfirmasi pembayaran
                     konfirmasi = input("Konfirmasi pembayaran? (y/n): ").lower()
                     
@@ -159,6 +158,8 @@ Mohon cek pembayaran saya dan konfirmasi booking. Terima kasih! 🙏"""
                             'id_mobil': mobil['id'], #tambah id mobil
                             'lama': lama_sewa,
                             'total': total_biaya,
+                            'denda_akhir': 0,
+                            'total_akhir':  0,
                             'status_rental': 'aktif' #penanda mobil masih di sewa
                         }
 
@@ -178,7 +179,7 @@ Mohon cek pembayaran saya dan konfirmasi booking. Terima kasih! 🙏"""
                         print("-" * 40)
                         print(f"TOTAL BAYAR  : Rp {struk['total']:,}")
                         print("="*40)
-                        print("[SUKSES] Transaksi berhasil disimpan!")
+                        print("[SUKSES] Transaksi berhasil disimpan! ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧")
                         
                     else:
                         print("[BATAL] Pembayaran dibatalkan.")
@@ -194,29 +195,59 @@ Mohon cek pembayaran saya dan konfirmasi booking. Terima kasih! 🙏"""
         print("\n[ERROR] Input tidak valid (pastikan angka dimasukkan dengan benar)!")
 
 def lihat_riwayat():
-    """Menampilkan daftar riwayat transaksi"""
+    """Menampilkan daftar riwayat transaksi dengan Pandas + Tabulate"""
     print("\n=== RIWAYAT TRANSAKSI ===")
+    
     if not riwayat_transaksi:
         print("Belum ada transaksi yang tercatat.")
     else:
-        # header tabel
-        # nanti coba yg tabel gtu di ganti pke pandas
-        print(f"{'No':<5} {'Tanggal':<18} {'Penyewa':<15} {'Mobil':<15} {'ID Mobil':<15} {'Hari':<15} {'Total (Rp)':<15} {'Status'}")
-        print("-" * 85)
+        # 1. Buat DataFrame dari list dictionary
+        df = pd.DataFrame(riwayat_transaksi)
         
-        for trx in riwayat_transaksi:
-            print(f"#{trx['no_trx']:<4} {trx['tanggal']:<18} {trx['penyewa']:<15} {trx['mobil']:<15} {trx['id_mobil']:<15} {trx['lama']:<15} {trx['total']:<15} {trx['status_rental']}")
-        print("-" * 85)
+        # 2. Atur urutan kolom agar rapi (pilih kolom yg mau ditampilkan)
+        df = df[['no_trx', 'tanggal', 'penyewa', 'mobil', 'id_mobil', 'lama', 'total', 'denda_akhir', 'total_akhir', 'status_rental']]
+        
+        # Format Rupiah pada kolom 'total'
+        df['total'] = df['total'].apply(lambda x: f"Rp {x:,}")
+        # Format kolom 'denda_akhir'
+        df['denda_akhir'] = df['denda_akhir'].apply(lambda x: f"Rp {x:,.0f}")
+        # Format kolom 'total_akhir'
+        df['total_akhir'] = df['total_akhir'].apply(lambda x: f"Rp {x:,.0f}")
+        
+        # 4. (Opsional) Kapitalisasi status agar lebih rapi (aktif -> Aktif)
+        df['status_rental'] = df['status_rental'].str.upper()
+
+        # 5. Ganti nama header kolom agar bahasa Indonesia dan rapi
+        df.columns = ['No', 'Tanggal', 'Penyewa', 'Mobil', 'ID Mobil', 'Hari', 'Biaya Sewa', 'Denda Keterlambatan', 'Total Akhir', 'Status']
+        
+        # 6. Tampilkan dengan Tabulate
+        print(tabulate(df, headers='keys', tablefmt='fancy_grid', showindex=False, stralign="left"))
+
 
 #ini tugas fathir (ubah pengembalian)
 def kembalikan_kendaraan():
     print("\n=== PENGEMBALIAN KENDARAAN ===")
-    # 1. Tampilkan mobil yang sedang disewa saja untuk memudahkan
-    print(f"{'ID':<5} {'Nama Kendaraan':<20} {'Status'}")
-    print("-" * 40)
-    for m in inventory:
-        if not m['tersedia']: # Hanya tampilkan yang sedang disewa
-            print(f"{m['id']:<5} {m['nama']:<20} Sedang Disewa")
+    # 1. Buat DataFrame dari inventory
+    df = pd.DataFrame(inventory)
+    
+    # 2. FILTER: Ambil hanya mobil yang 'tersedia' == False (Sedang Disewa)
+    df_sewa = df[df['tersedia'] == False].copy()
+    
+    # Cek jika tidak ada yang disewa
+    if df_sewa.empty:
+        print("[INFO] Tidak ada mobil yang sedang disewa saat ini.")
+        return
+    
+    # 3. Tambahkan kolom status teks manual (opsional, biar jelas)
+    df_sewa['Status Keterangan'] = "Sedang Disewa"
+    
+    # 4. Pilih kolom yang mau ditampilkan
+    df_tampil = df_sewa[['id', 'nama', 'Status Keterangan']]
+    df_tampil.columns = ['ID', 'Nama Kendaraan', 'Status']
+    
+    # 5. Tampilkan dengan Tabulate
+    print(tabulate(df_tampil, headers='keys', tablefmt='fancy_grid', showindex=False, stralign="left"))
+    
     print("-" * 40)
     
     try:
@@ -293,7 +324,7 @@ def kembalikan_kendaraan():
             transaksi_aktif['denda_akhir'] = denda
             transaksi_aktif['total_akhir'] = total_akhir
             
-            print("\n[SUKSES] Mobil telah dikembalikan dan status menjadi TERSEDIA.")
+            print("\n[SUKSES] Mobil telah dikembalikan dan status menjadi TERSEDIA. ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧")
         else:
             print("\n[BATAL] Pengembalian dibatalkan.")
 
@@ -303,7 +334,7 @@ def kembalikan_kendaraan():
 def main():
     while True:
         print ()
-        print("𝐖𝐄𝐋𝐂𝐎𝐌𝐄")
+        print(" ✨ Welcome ✨ ")
         print("="*25)
         print("SISTEM RENTAL MOBIL")
         print("="*25)
@@ -322,16 +353,17 @@ def main():
             clear_screen()
             sewa_kendaraan()
         elif pilihan == '3':
+            clear_screen()
             kembalikan_kendaraan()
         elif pilihan == '4':
             clear_screen()
             lihat_riwayat()
         elif pilihan == '5':
-            print("\nTerima kasih telah menggunakan sistem rental kami!")
+            print("\nTerima kasih telah menggunakan sistem rental kami! (˶ᵔ ᵕ ᵔ˶)")
             break
         else:
             clear_screen()
-            print("\nPilihan tidak valid, silakan coba lagi.")
+            print("\n⚠︎ Pilihan tidak valid, silakan coba lagi.")
 
 
 main()
