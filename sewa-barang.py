@@ -2,7 +2,7 @@ import os
 import datetime
 import pandas as pd
 import modul
-from diskon_service import hitung_diskon
+from modul_diskon import hitung_diskon
 from PIL import Image
 from tabulate import tabulate
 
