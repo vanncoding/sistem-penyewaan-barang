@@ -29,7 +29,7 @@ def clear_screen():
 #ini tugas dapa/ismet (ubah tabel pakai pandas)
 def tampilkan_kendaraan():
     """Menampilkan semua kendaraan dalam bentuk tabel (Coba bagian ini bisa pke pandas ga ya?)"""
-    print("\n=== DAFTAR KENDARAAN ===")
+    print("\n" +"=== DAFTAR KENDARAAN ===".center(55))
 
     df = pd.DataFrame(inventory)
 
