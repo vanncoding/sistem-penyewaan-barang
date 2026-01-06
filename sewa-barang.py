@@ -1,13 +1,12 @@
 import os
 import datetime
 import pandas as pd
-import modul
 from modul_diskon import hitung_diskon
 from PIL import Image
 from tabulate import tabulate
 
 #tugas zuqy (buat modul buat import)
-#isi modul nya (1. modul garis, 2. modul variabel diskon)
+#isi modul nya (modul variabel diskon)
 
 inventory = [
     {'id': 1, 'nama': 'Toyota Avanza', 'harga': 300000, 'tersedia': True},
@@ -201,26 +200,23 @@ def lihat_riwayat():
     if not riwayat_transaksi:
         print("Belum ada transaksi yang tercatat.")
     else:
-        # 1. Buat DataFrame dari list dictionary
         df = pd.DataFrame(riwayat_transaksi)
         
-        # 2. Atur urutan kolom agar rapi (pilih kolom yg mau ditampilkan)
+        # Atur urutan kolom agar rapi (pilih kolom yg mau ditampilkan)
         df = df[['no_trx', 'tanggal', 'penyewa', 'mobil', 'id_mobil', 'lama', 'total', 'denda_akhir', 'total_akhir', 'status_rental']]
         
-        # Format Rupiah pada kolom 'total'
+        # Format Rupiah pada kolom yg berangka
         df['total'] = df['total'].apply(lambda x: f"Rp {x:,}")
-        # Format kolom 'denda_akhir'
         df['denda_akhir'] = df['denda_akhir'].apply(lambda x: f"Rp {x:,.0f}")
-        # Format kolom 'total_akhir'
         df['total_akhir'] = df['total_akhir'].apply(lambda x: f"Rp {x:,.0f}")
         
-        # 4. (Opsional) Kapitalisasi status agar lebih rapi (aktif -> Aktif)
+        # Kapitalisasi status agar lebih rapi
         df['status_rental'] = df['status_rental'].str.upper()
 
-        # 5. Ganti nama header kolom agar bahasa Indonesia dan rapi
+        # Nama header kolom
         df.columns = ['No', 'Tanggal', 'Penyewa', 'Mobil', 'ID Mobil', 'Hari', 'Biaya Sewa', 'Denda Keterlambatan', 'Total Akhir', 'Status']
         
-        # 6. Tampilkan dengan Tabulate
+        # Tampilkan dengan Tabulate
         print(tabulate(df, headers='keys', tablefmt='fancy_grid', showindex=False, stralign="left"))
 
 
@@ -228,10 +224,10 @@ def lihat_riwayat():
 def kembalikan_kendaraan():
     """Logika pengembalian kendaraan"""
     print("\n=== PENGEMBALIAN KENDARAAN ===")
-    # 1. Buat DataFrame dari inventory
+    # Buat DataFrame dari inventory
     df = pd.DataFrame(inventory)
     
-    # 2. FILTER: Ambil hanya mobil yang 'tersedia' == False (Sedang Disewa)
+    # FILTER: Ambil hanya mobil yang 'tersedia' == False (Sedang Disewa)
     df_sewa = df[df['tersedia'] == False].copy()
     
     # Cek jika tidak ada yang disewa
@@ -239,14 +235,14 @@ def kembalikan_kendaraan():
         print("[📌 INFO] Tidak ada mobil yang sedang disewa saat ini.")
         return
     
-    # 3. Tambahkan kolom status teks manual (opsional, biar jelas)
+    # Tambahkan kolom status teks manual (opsional, biar jelas)
     df_sewa['Status Keterangan'] = "Sedang Disewa"
     
-    # 4. Pilih kolom yang mau ditampilkan
+    # Pilih kolom yang mau ditampilkan
     df_tampil = df_sewa[['id', 'nama', 'Status Keterangan']]
     df_tampil.columns = ['ID', 'Nama Kendaraan', 'Status']
     
-    # 5. Tampilkan dengan Tabulate
+    # Tampilkan dengan Tabulate
     print(tabulate(df_tampil, headers='keys', tablefmt='fancy_grid', showindex=False, stralign="left"))
     
     print("-" * 40)
@@ -316,12 +312,11 @@ def kembalikan_kendaraan():
         konfirmasi = input("\nProses pengembalian & pembayaran? (y/n): ").lower()
         
         if konfirmasi == 'y':
-            # 1. Update status mobil jadi tersedia
+            # Update status mobil jadi tersedia
             mobil_target['tersedia'] = True
             
-            # 2. Update status transaksi jadi selesai (biar tidak muncul lagi nanti)
+            # Update status transaksi jadi selesai (biar tidak muncul lagi nanti)
             transaksi_aktif['status_rental'] = 'selesai'
-            # Kita juga bisa simpan info denda ke riwayat jika mau
             transaksi_aktif['denda_akhir'] = denda
             transaksi_aktif['total_akhir'] = total_akhir
             
