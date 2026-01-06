@@ -332,7 +332,7 @@ def kembalikan_kendaraan():
     except ValueError:
         print("\n[⚠️  ERROR] Masukkan angka yang valid!")
 
-def main():
+def menu_utama():
     """Menampilkan menu utama"""
     while True:
         print ()
@@ -368,4 +368,4 @@ def main():
             print("\n⚠️  Pilihan tidak valid, silakan coba lagi.")
 
 
-main()
+menu_utama()
