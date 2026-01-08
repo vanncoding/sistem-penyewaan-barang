@@ -1,9 +1,11 @@
 import os
 import datetime
-import pandas as pd
+import pandas as pds
 from modul_diskon import hitung_diskon
 from PIL import Image
 from tabulate import tabulate
+import urllib.parse
+import webbrowser
 
 #tugas zuqy (buat modul buat import)
 #isi modul nya (modul variabel diskon)
@@ -30,9 +32,10 @@ def clear_screen():
 #ini tugas dapa/ismet (ubah tabel pakai pandas)
 def tampilkan_kendaraan():
     """Menampilkan semua kendaraan dalam bentuk tabel"""
-    print("\n=== DAFTAR KENDARAAN ===")
+    print("\n                === DAFTAR KENDARAAN ===")
+    print()
 
-    df = pd.DataFrame(inventory)
+    df = pds.DataFrame(inventory)
 
     df['status'] = df ['tersedia'].apply(lambda x: 'tersedia' if x else 'sedang disewa')
     df['Harga/Hari'] = df['harga'].apply(lambda x: f"Rp {x:,}")
@@ -90,7 +93,7 @@ def sewa_kendaraan():
                         img=Image.open(gambar_qris)
                         img.show()
 
-                        print("\nQris Berhasil Ditampilkan✅\nSilahkan ScreenShot Bukti Pembayaran📷💰 dan Isi Form di WhatsApp✍ 💌")
+                        print("\nQris Berhasil Ditampilkan✅\nSilahkan ScreenShot Bukti Pembayaran📷💰 dan Kirim Form di WhatsApp✍ 💌")
                     except FileNotFoundError:
                         print(f"❌ ERROR : File Gambar QRIS\n Tidak Ditemukan!!")
                     except Exception as e :
@@ -102,7 +105,7 @@ def sewa_kendaraan():
                     print("📱 KIRIM BUKTI PEMBAYARAN VIA WHATSAPP")
                     print("="*60)
                     
-                    input("\nTekan ENTER untuk membuka WhatsApp dan isi form konfirmasi...")
+                    input("\nTekan ENTER untuk membuka WhatsApp dan kirim form konfirmasi...")
                     
                     # Buat pesan WhatsApp otomatis
                     nomor_wa = "6285773840478"  
@@ -111,28 +114,26 @@ def sewa_kendaraan():
 
 Saya ingin mengkonfirmasi pembayaran sewa kendaraan:
 
-━━━━━━━━━━━━━━━━━━━━━━━━
+------------------------------------------
  DATA TRANSAKSI
-━━━━━━━━━━━━━━━━━━━━━━━━
+------------------------------------------
  Nama Penyewa    : {nama_penyewa}
  Kendaraan       : {mobil['nama']}
  ID Kendaraan    : {mobil['id']}
  Lama Sewa       : {lama_sewa} Hari
  Total Bayar     : Rp {total_biaya:,}
  Tanggal Booking : {datetime.datetime.now().strftime("%d %B %Y, %H:%M")}
-━━━━━━━━━━━━━━━━━━━━━━━━
+------------------------------------------
 
 Mohon cek pembayaran saya dan konfirmasi booking. Terima kasih! 🙏"""
                     
                     # pesan buat URL
-                    import urllib.parse
                     pesan_encoded = urllib.parse.quote(pesan)
                     
                     # Buat link WhatsApp
                     wa_link = f"https://wa.me/{nomor_wa}?text={pesan_encoded}"
                     
                     # Buka WhatsApp otomatis
-                    import webbrowser
                     print("\n🌐 Membuka WhatsApp...")
                     webbrowser.open(wa_link)
                     print("✓ WhatsApp berhasil dibuka!")
@@ -200,7 +201,7 @@ def lihat_riwayat():
     if not riwayat_transaksi:
         print("Belum ada transaksi yang tercatat.")
     else:
-        df = pd.DataFrame(riwayat_transaksi)
+        df = pds.DataFrame(riwayat_transaksi)
         
         # Atur urutan kolom agar rapi (pilih kolom yg mau ditampilkan)
         df = df[['no_trx', 'tanggal', 'penyewa', 'mobil', 'id_mobil', 'lama', 'total', 'denda_akhir', 'total_akhir', 'status_rental']]
@@ -225,7 +226,7 @@ def kembalikan_kendaraan():
     """Logika pengembalian kendaraan"""
     print("\n=== PENGEMBALIAN KENDARAAN ===")
     # Buat DataFrame dari inventory
-    df = pd.DataFrame(inventory)
+    df = pds.DataFrame(inventory)
     
     # FILTER: Ambil hanya mobil yang 'tersedia' == False (Sedang Disewa)
     df_sewa = df[df['tersedia'] == False].copy()
@@ -331,7 +332,7 @@ def menu_utama():
     """Menampilkan menu utama"""
     while True:
         print ()
-        print(" ✨ Welcome ✨ ")
+        print("      ✨ Welcome ✨ ")
         print("="*25)
         print("SISTEM RENTAL MOBIL")
         print("="*25)
