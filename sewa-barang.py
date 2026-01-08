@@ -125,7 +125,7 @@ Saya ingin mengkonfirmasi pembayaran sewa kendaraan:
  Tanggal Booking : {datetime.datetime.now().strftime("%d %B %Y, %H:%M")}
 ------------------------------------------
 
-Mohon cek pembayaran saya dan konfirmasi booking. Terima kasih! 🙏"""
+Mohon cek pembayaran saya dan konfirmasi booking. Terima kasih! """
                     
                     # pesan buat URL
                     pesan_encoded = urllib.parse.quote(pesan)
