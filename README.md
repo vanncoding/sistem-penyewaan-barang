@@ -197,16 +197,18 @@ sistem-penyewaan-barang/
 | Nama | Tugas |
 |------|-------|
 | Zuqy | Modul Diskon |
-| Dapa/Ismet | Tabel Pandas |
-| Revan | QRIS & WhatsApp |
-| Fathir | Pengembalian Kendaraan |
+| Dapa | Tabel Pandas |
+| Revan | Pembayaran, Readme, QRIS & WhatsApp |
+| Fathir | Halaman Utama, Riwayat, Sewa Kendaraan & Pengembalian Kendaraan |
+| Gilang | Membuat PPT |
+| Arya | Membuat PPT |
 
 ---
 
 ## 📞 Kontak
 
 - **GitHub:** [vanncoding](https://github.com/vanncoding)
-- **WhatsApp:** +62 857-7384-0478
+- **WhatsApp:** +62 857-7384-0478 (admin rental)
 
 ---
 
