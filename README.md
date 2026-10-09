@@ -211,5 +211,3 @@ sistem-penyewaan-barang/
 - **WhatsApp:** +62 857-7384-0478 (admin rental)
 
 ---
-
-**Dibuat dengan ❤️ menggunakan Python**
