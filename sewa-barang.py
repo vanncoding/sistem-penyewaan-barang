@@ -1,556 +1,367 @@
-import json
-import time
-import re
-import urllib.request
-import urllib.error
-import uuid
 import os
-from datetime import datetime
-from zoneinfo import ZoneInfo
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import chromedriver_autoinstaller
+import datetime
+import pandas as pds
+from modul_diskon import hitung_diskon
+from PIL import Image
+from tabulate import tabulate
+import urllib.parse
+import webbrowser
 
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1552880010107559956/ZoQc5fW9HaJixABKeb9Lb8TwztGiN2qiVEe7ABaTp411KFVr-dOImDTxH-7X7p3Cuwb5"
+#tugas zuqy (buat modul buat import)
+#isi modul nya (modul variabel diskon)
 
-# Gambar status: taruh file-nya di folder assets/status/
-GAMBAR_STATUS = {
-    "berhasil": "assets/status/berhasil.png",
-    "sudah_absen": "assets/status/sudah_absen.png",
-    "belum_waktunya": "assets/status/belum_waktunya.png",
-    "tidak_terverifikasi": "assets/status/tidak_terverifikasi.png",
-    "gagal": "assets/status/gagal.png",
-}
+inventory = [
+    {'id': 1, 'nama': 'Toyota Avanza', 'harga': 300000, 'tersedia': True},
+    {'id': 2, 'nama': 'Honda Brio',    'harga': 250000, 'tersedia': True},
+    {'id': 3, 'nama': 'Toyota Innova', 'harga': 500000, 'tersedia': True},
+    {'id': 4, 'nama': 'Mitsubishi Pajero', 'harga': 800000, 'tersedia': True},
+    {'id': 5, 'nama': 'Mazda CX3', 'harga': 700000, 'tersedia': True},
+    {'id': 6, 'nama': 'Daihatsu Sigra', 'harga': 200000, 'tersedia': True},
+    {'id': 7, 'nama': 'Toyota Agya', 'harga': 160000, 'tersedia': True},
+    {'id': 8, 'nama': 'Daihatsu Xenia', 'harga': 300000, 'tersedia': True},
+    {'id': 9, 'nama': 'Toyota Raize', 'harga': 400000, 'tersedia': True},
+    {'id': 10, 'nama': 'Lamborghini Revuelto ', 'harga': 10000000, 'tersedia': True},
+]
 
-LABEL_STATUS = {
-    "berhasil": "✅ Absen Berhasil",
-    "sudah_absen": "✅ Sudah Absen Sebelumnya",
-    "belum_waktunya": "⏳ Belum Waktunya",
-    "tidak_terverifikasi": "⚠️ Tidak Terverifikasi",
-    "gagal": "❌ Absen Gagal",
-}
+riwayat_transaksi = []
 
-PRIORITAS_STATUS = ["berhasil", "sudah_absen", "tidak_terverifikasi", "belum_waktunya", "gagal"]
-STATUS_KURANG_MULUS = ["tidak_terverifikasi", "belum_waktunya", "gagal"]
+def clear_screen():
+    """Membersihkan layar terminal agar rapi"""
+    os.system('cls' if os.name == 'nt' else 'clear')
 
-WIB = ZoneInfo("Asia/Jakarta")
+#ini tugas dapa/ismet (ubah tabel pakai pandas)
+def tampilkan_kendaraan():
+    """Menampilkan semua kendaraan dalam bentuk tabel"""
+    print("\n                === DAFTAR KENDARAAN ===")
+    print()
 
-SCREENSHOTS = {}  # {nama_akun: path_file_screenshot}
+    df = pds.DataFrame(inventory)
 
-def log_proses(pesan):
-    waktu = datetime.now(WIB).strftime("%H:%M:%S")
-    print(f"[{waktu}] {pesan}", flush=True)
+    df['status'] = df ['tersedia'].apply(lambda x: 'tersedia' if x else 'sedang disewa')
+    df['Harga/Hari'] = df['harga'].apply(lambda x: f"Rp {x:,}")
 
-def load_config():
-    with open('src/config.json', 'r') as f:
-        return json.load(f)
+    df_tampil = df[['id','nama','Harga/Hari','status']]
+    df_tampil.columns = ['ID','Nama Kendaraan', 'Harga/Hari', 'Status']
+  
+    print(tabulate(df_tampil, headers='keys', tablefmt='fancy_grid', showindex=False, stralign="left"))
 
-def get_day_name():
-    return datetime.now(WIB).strftime('%A').lower()
+    print("-" * 55)
+    
+    
 
-def kirim_discord(pesan):
-    """Kirim pesan teks ke Discord lewat webhook."""
+
+#ini tugas revan (munculin qris sebelum verifikasi, abis muncul qris muncul format konfirmasi kirim email, setelah kirim email muncul konfirmasi)
+def tampilkan_link_dan_buka(text, url):
+    """nampilin link"""
+    print(f"\n{text}")
+    print(f"Link: {url}")
+
+def sewa_kendaraan():
+    """logika sewa kendaraan"""
+    tampilkan_kendaraan()
     try:
-        data = json.dumps({"content": pesan}).encode('utf-8')
-        req = urllib.request.Request(
-            DISCORD_WEBHOOK_URL,
-            data=data,
-            headers={
-                "Content-Type": "application/json",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-            },
-            method="POST"
-        )
-        urllib.request.urlopen(req, timeout=15)
-        log_proses("📨 Notifikasi Discord terkirim.")
-    except urllib.error.HTTPError as e:
-        body = e.read().decode('utf-8', errors='ignore')
-        log_proses(f"⚠️ Gagal mengirim notifikasi Discord: HTTP {e.code} - {body}")
-    except Exception as e:
-        log_proses(f"⚠️ Gagal mengirim notifikasi Discord: {e}")
+        id_sewa = int(input("\nMasukkan ID kendaraan yang ingin disewa: "))
+        
+        ditemukan = False
+        for mobil in inventory:
+            if mobil['id'] == id_sewa:
+                ditemukan = True
+                # cek ketersediaan
+                if mobil['tersedia']:
+                    print(f"\n--- FORM PEMBAYARAN: {mobil['nama']} ---")
+                    # 1. input data penyewa
+                    nama_penyewa = input("Nama Penyewa      : ")
+                    lama_sewa = int(input("Lama Sewa (hari)  : "))
+                   # 2. hitung biaya awal
+                    biaya_dasar = mobil['harga'] * lama_sewa
+                    
+                    # HITUNG DISKON MENGGUNAKAN MODUL
+                    potongan, persen = hitung_diskon(biaya_dasar, lama_sewa)
+                    total_biaya = biaya_dasar - potongan
 
-def kirim_discord_file(pesan, path_file):
-    """Kirim pesan + 1 file gambar ke Discord lewat webhook (multipart/form-data)."""
-    try:
-        boundary = uuid.uuid4().hex
-        nama_file = os.path.basename(path_file)
-        with open(path_file, "rb") as f:
-            isi_file = f.read()
+                    print(f"Harga Dasar       : Rp {biaya_dasar:,}")
+                    print(f"Diskon ({persen}%)    : -Rp {potongan:,}")
+                    print(f"Total Bayar       : Rp {total_biaya:,}")
 
-        payload_json = json.dumps({"content": pesan}).encode("utf-8")
-        crlf = b"\r\n"
-        body = b""
-        body += f"--{boundary}".encode() + crlf
-        body += b'Content-Disposition: form-data; name="payload_json"' + crlf
-        body += b"Content-Type: application/json" + crlf + crlf
-        body += payload_json + crlf
-        body += f"--{boundary}".encode() + crlf
-        body += f'Content-Disposition: form-data; name="files[0]"; filename="{nama_file}"'.encode() + crlf
-        body += b"Content-Type: image/png" + crlf + crlf
-        body += isi_file + crlf
-        body += f"--{boundary}--".encode() + crlf
+                    #tambahin qris nih disini
+                    input("\nSetelah Muncul Qris Silahkan Bayar Sesuai Nominal💸💰!!! \nTekan Tombol Enter Untuk Bayar..... !!")
 
-        req = urllib.request.Request(
-            DISCORD_WEBHOOK_URL,
-            data=body,
-            headers={
-                "Content-Type": f"multipart/form-data; boundary={boundary}",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-            },
-            method="POST"
-        )
-        urllib.request.urlopen(req, timeout=30)
-        log_proses(f"📨 File terkirim ke Discord: {nama_file}")
-    except urllib.error.HTTPError as e:
-        body_err = e.read().decode('utf-8', errors='ignore')
-        log_proses(f"⚠️ Gagal mengirim file ke Discord: HTTP {e.code} - {body_err}")
-    except Exception as e:
-        log_proses(f"⚠️ Gagal mengirim file ke Discord: {e}")
+                    try :
+                        folder_qris = os.path.dirname(os.path.abspath(__file__))
+                        gambar_qris = os.path.join(folder_qris, "qris.jpg")
 
-def kirim_gambar_status_gabungan(semua_hasil):
-    """Kirim SATU gambar sticker mewakili SEMUA hasil (semua kelas, semua akun)
-    di run ini. Gambar dipilih dari status yang paling banyak terjadi across
-    seluruh baris hasil. Status 'kurang mulus' (gagal/belum_waktunya/
-    tidak_terverifikasi) -- baik minoritas maupun mayoritas -- selalu
-    disebutkan sebagai baris "YAHH TAPI (status) (jumlah) BOSKYUH"."""
-    counts = {}
-    detail = {}  # status -> [(nama_akun, kelas), ...]
-    for nama_akun, daftar_kelas in semua_hasil.items():
-        for item in daftar_kelas:
-            st = item["status"]
-            counts[st] = counts.get(st, 0) + 1
-            detail.setdefault(st, []).append((nama_akun, item["kelas"]))
+                        img=Image.open(gambar_qris)
+                        img.show()
 
-    if not counts:
-        log_proses("⚠️ Tidak ada hasil sama sekali untuk dikirim gambar status gabungan.")
-        return
+                        print("\nQris Berhasil Ditampilkan✅\nSilahkan ScreenShot Bukti Pembayaran📷💰 dan Kirim Form di WhatsApp✍ 💌")
+                    except FileNotFoundError:
+                        print(f"❌ ERROR : File Gambar QRIS\n Tidak Ditemukan!!")
+                    except Exception as e :
+                        print(f"ERROR : {e}")
+                    
+                    #disini buat otomatis ngisi form di wa gezzzz
+                    # 🆕 OTOMATIS ISI FORM WHATSAPP
+                    print("\n" + "="*60)
+                    print("📱 KIRIM BUKTI PEMBAYARAN VIA WHATSAPP")
+                    print("="*60)
+                    
+                    input("\nTekan ENTER untuk membuka WhatsApp dan kirim form konfirmasi...")
+                    
+                    # Buat pesan WhatsApp otomatis
+                    nomor_wa = "6285773840478"  
+                    
+                    pesan = f"""Halo Admin Rental Mobil! 
 
-    def urutan(st):
-        return PRIORITAS_STATUS.index(st) if st in PRIORITAS_STATUS else 99
+Saya ingin mengkonfirmasi pembayaran sewa kendaraan:
 
-    status_mayoritas = max(counts.items(), key=lambda kv: (kv[1], -urutan(kv[0])))[0]
+------------------------------------------
+ DATA TRANSAKSI
+------------------------------------------
+ Nama Penyewa    : {nama_penyewa}
+ Kendaraan       : {mobil['nama']}
+ ID Kendaraan    : {mobil['id']}
+ Lama Sewa       : {lama_sewa} Hari
+ Total Bayar     : Rp {total_biaya:,}
+ Tanggal Booking : {datetime.datetime.now().strftime("%d %B %Y, %H:%M")}
+------------------------------------------
 
-    path_gambar = GAMBAR_STATUS.get(status_mayoritas)
-    if not path_gambar or not os.path.exists(path_gambar):
-        log_proses(f"⚠️ Gambar status untuk '{status_mayoritas}' tidak ditemukan ({path_gambar}), lewati kirim gambar gabungan.")
-        return
+Mohon cek pembayaran saya dan konfirmasi booking. Terima kasih! """
+                    
+                    # pesan buat URL
+                    pesan_encoded = urllib.parse.quote(pesan)
+                    
+                    # Buat link WhatsApp
+                    wa_link = f"https://wa.me/{nomor_wa}?text={pesan_encoded}"
+                    
+                    # Buka WhatsApp otomatis
+                    print("\n🌐 Membuka WhatsApp...")
+                    webbrowser.open(wa_link)
+                    print("✓ WhatsApp berhasil dibuka!")
+                    print("\n📸 Jangan lupa kirim screenshot bukti pembayaran!")
+                    
+                    print("="*60)
 
-    baris = [LABEL_STATUS.get(status_mayoritas, status_mayoritas)]
-    for st in STATUS_KURANG_MULUS:
-        if st in counts:
-            label_upper = LABEL_STATUS.get(st, st).split(" ", 1)[-1].upper()
-            baris.append(f"YAHH TAPI {label_upper} {counts[st]} BOSKYUH")
-            for nama_akun, kelas in detail[st]:
-                baris.append(f"  • {nama_akun} — `{kelas}`")
+                    # 3. konfirmasi pembayaran
+                    konfirmasi = input("Konfirmasi pembayaran? (y/n): ").lower()
+                    
+                    if konfirmasi == 'y':
+                        # ubah status mobil
+                        mobil['tersedia'] = False
 
-    caption = "\n".join(baris)
-    kirim_discord_file(caption, path_gambar)
+                        # 4. buat data struk
+                        no_transaksi = len(riwayat_transaksi) + 1
+                        struk = {
+                            'no_trx': no_transaksi,
+                            'tanggal': datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            'penyewa': nama_penyewa,
+                            'mobil': mobil['nama'],
+                            'id_mobil': mobil['id'], #tambah id mobil
+                            'lama': lama_sewa,
+                            'total': total_biaya,
+                            'denda_akhir': 0,
+                            'total_akhir':  0,
+                            'status_rental': 'aktif' #penanda mobil masih di sewa
+                        }
 
-
-def ambil_screenshot(driver, nama_akun):
-    """Ambil screenshot halaman terakhir milik satu akun (full page, tinggi dibatasi)."""
-    try:
-        tinggi = driver.execute_script(
-            "return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);"
-        )
-        driver.set_window_size(1280, min(max(int(tinggi), 800), 3000))
-        time.sleep(1)
-        nama_aman = re.sub(r'[^A-Za-z0-9_-]+', '_', nama_akun).strip('_') or "akun"
-        path = f"ss_{nama_aman}.png"
-        driver.save_screenshot(path)
-        SCREENSHOTS[nama_akun] = path
-        log_proses(f"📸 Screenshot akun disimpan: {path}")
-    except Exception as e:
-        log_proses(f"⚠️ Gagal mengambil screenshot akun {nama_akun}: {e}")
-
-def solve_captcha(driver):
-    """Cari pertanyaan captcha, ekstrak angka & operator, hitung hasilnya."""
-    captcha_selectors = [
-        "label[for='captcha']",
-        ".captcha-text",
-        ".verifikasi-text",
-        "label:contains('hasil')",
-        "//label[contains(text(),'hasil')]",
-        "//p[contains(text(),'hasil')]",
-        "//div[contains(text(),'hasil')]",
-        "//span[contains(text(),'hasil')]"
-    ]
-    question_text = None
-    for sel in captcha_selectors:
-        try:
-            if sel.startswith('//'):
-                elem = driver.find_element(By.XPATH, sel)
-            else:
-                elem = driver.find_element(By.CSS_SELECTOR, sel)
-            question_text = elem.text.strip()
-            if question_text:
+                        # 5. simpan ke list riwayat
+                        riwayat_transaksi.append(struk)
+                        
+                        # 6. cetak struk ke layar
+                        print("\n" + "="*40)
+                        print("          STRUK BUKTI RENTAL")
+                        print("="*40)
+                        print(f"No Transaksi : #TRX-{struk['no_trx']:03d}")
+                        print(f"Tanggal      : {struk['tanggal']}")
+                        print(f"Penyewa      : {struk['penyewa']}")
+                        print(f"Kendaraan    : {struk['mobil']}")
+                        print(f"Kendaraan    : {struk['id_mobil']}")
+                        print(f"Durasi       : {struk['lama']} Hari")
+                        print("-" * 40)
+                        print(f"TOTAL BAYAR  : Rp {struk['total']:,}")
+                        print("="*40)
+                        print("[SUKSES] Transaksi berhasil disimpan! ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧")
+                        
+                    else:
+                        print("[❌  BATAL] Pembayaran dibatalkan.")
+                
+                else:
+                    print(f"\n[❌  GAGAL] Maaf, {mobil['nama']} sedang disewa orang lain.")
                 break
-        except:
-            continue
+        
+        if not ditemukan:
+            print("\n[⚠️  ERROR] ID kendaraan tidak ditemukan.")
+            
+    except ValueError:
+        print("\n[⚠️  ERROR] Input tidak valid (pastikan angka dimasukkan dengan benar)!")
 
-    if not question_text:
-        page_text = driver.page_source
-        match = re.search(r'hasil dari\s*([\d\s\+\-\*\/]+)\s*\?', page_text, re.IGNORECASE)
-        if match:
-            question_text = match.group(0)
-        else:
-            match = re.search(r'(\d+)\s*([+\-*/])\s*(\d+)\s*=\s*\?', page_text)
-            if match:
-                question_text = match.group(0)
-            else:
-                return None
-
-    log_proses(f"🧮 Pertanyaan captcha: {question_text}")
-
-    match = re.search(r'(\d+)\s*([+\-*/])\s*(\d+)', question_text)
-    if not match:
-        numbers = re.findall(r'\d+', question_text)
-        if len(numbers) >= 2:
-            a = int(numbers[0])
-            b = int(numbers[1])
-            op_match = re.search(r'[+\-*/]', question_text)
-            op = op_match.group(0) if op_match else '+'
-        else:
-            return None
+def lihat_riwayat():
+    """Menampilkan daftar riwayat transaksi"""
+    print("\n=== RIWAYAT TRANSAKSI ===")
+    
+    if not riwayat_transaksi:
+        print("Belum ada transaksi yang tercatat.")
     else:
-        a = int(match.group(1))
-        op = match.group(2)
-        b = int(match.group(3))
+        df = pds.DataFrame(riwayat_transaksi)
+        
+        # Atur urutan kolom agar rapi (pilih kolom yg mau ditampilkan)
+        df = df[['no_trx', 'tanggal', 'penyewa', 'mobil', 'id_mobil', 'lama', 'total', 'denda_akhir', 'total_akhir', 'status_rental']]
+        
+        # Format Rupiah pada kolom yg berangka
+        df['total'] = df['total'].apply(lambda x: f"Rp {x:,}")
+        df['denda_akhir'] = df['denda_akhir'].apply(lambda x: f"Rp {x:,.0f}")
+        df['total_akhir'] = df['total_akhir'].apply(lambda x: f"Rp {x:,.0f}")
+        
+        # Kapitalisasi status agar lebih rapi
+        df['status_rental'] = df['status_rental'].str.upper()
 
-    if op == '+':
-        result = a + b
-    elif op == '-':
-        result = a - b
-    elif op == '*':
-        result = a * b
-    elif op == '/':
-        result = a // b if b != 0 else 0
-    else:
-        result = a + b
-
-    log_proses(f"✅ Jawaban captcha: {result}")
-    return str(result)
-
-
-def buat_browser():
-    log_proses("⚙️ Menyiapkan browser (Headless Chrome)...")
-    chromedriver_autoinstaller.install()
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-blink-features=AutomationControlled')
-    options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
-    driver = webdriver.Chrome(options=options)
-    wait = WebDriverWait(driver, 15)
-    return driver, wait
+        # Nama header kolom
+        df.columns = ['No', 'Tanggal', 'Penyewa', 'Mobil', 'ID Mobil', 'Hari', 'Biaya Sewa', 'Denda Keterlambatan', 'Total Akhir', 'Status']
+        
+        # Tampilkan dengan Tabulate
+        print(tabulate(df, headers='keys', tablefmt='fancy_grid', showindex=False, stralign="left"))
 
 
-def run_for_account(account, classes, config):
-    """Jalankan proses login + absen untuk SATU akun.
-    Return: list of dict {kelas, status, alasan} untuk direkap ke Discord.
-    """
-    nama_akun = account.get('name', account.get('username', 'Akun'))
-    log_proses(f"\n=========== 👤 Memproses akun: {nama_akun} ===========")
-
-    hasil_akun = []  # rekap semua kelas untuk akun ini
-
-    driver, wait = buat_browser()
-
-    try:
-        # --- LOGIN ---
-        login_url = config.get('login_url', 'http://elearning.bsi.ac.id/login')
-        log_proses(f"🔑 Membuka halaman login: {login_url}")
-        driver.get(login_url)
-        time.sleep(3)
-
-        # Username
-        try:
-            username_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, config['login_locator']['username_input'])))
-            username_input.clear()
-            username_input.send_keys(account['username'])
-            log_proses("✅ Username diisi")
-        except Exception as e:
-            log_proses(f"❌ Gagal menemukan input username: {e}")
-            hasil_akun.append({"kelas": "-", "status": "gagal", "alasan": "Gagal menemukan input username"})
-            return hasil_akun
-
-        # Password
-        try:
-            password_input = driver.find_element(By.CSS_SELECTOR, config['login_locator']['password_input'])
-            password_input.clear()
-            password_input.send_keys(account['password'])
-            log_proses("✅ Password diisi")
-        except Exception as e:
-            log_proses(f"❌ Gagal menemukan input password: {e}")
-            hasil_akun.append({"kelas": "-", "status": "gagal", "alasan": "Gagal menemukan input password"})
-            return hasil_akun
-
-        # CAPTCHA
-        captcha_answer = solve_captcha(driver)
-        if captcha_answer is None:
-            log_proses("⚠️ Gagal membaca captcha. Mungkin tidak ada captcha, lanjutkan...")
-        else:
-            captcha_input = None
-            captcha_selectors = [
-                "input[name='captcha']",
-                "input[name='captcha_answer']",
-                "input[name='verifikasi']",
-                "input[id='captcha']",
-                "input[id='captcha_answer']",
-                "input[id='verifikasi']",
-                "input[placeholder*='jawaban' i]",
-                "input[placeholder*='verifikasi' i]",
-                "input[type='text']:not([name='username']):not([name='password'])"
-            ]
-            for sel in captcha_selectors:
-                try:
-                    captcha_input = driver.find_element(By.CSS_SELECTOR, sel)
-                    break
-                except:
-                    continue
-            if captcha_input:
-                captcha_input.clear()
-                captcha_input.send_keys(captcha_answer)
-                driver.execute_script("arguments[0].dispatchEvent(new Event('input'));", captcha_input)
-                driver.execute_script("arguments[0].dispatchEvent(new Event('change'));", captcha_input)
-                time.sleep(1)
-                log_proses("✅ Jawaban captcha diisi dan divalidasi")
-            else:
-                log_proses("❌ Tidak menemukan input untuk captcha")
-
-        # Submit login
-        try:
-            log_proses("🔄 Mengirimkan data login ke server...")
-            login_btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-            driver.execute_script("arguments[0].click();", login_btn)
-            log_proses("✅ Tombol login diklik via JavaScript")
-        except Exception as e:
-            log_proses(f"❌ Gagal mengeklik tombol login: {e}")
-            hasil_akun.append({"kelas": "-", "status": "gagal", "alasan": "Gagal mengeklik tombol login"})
-            return hasil_akun
-
-        time.sleep(8)
-        log_proses(f"📍 URL setelah login: {driver.current_url}")
-
-        if "login" in driver.current_url.lower():
-            log_proses("❌ Login gagal, masih di halaman login.")
-            error_msg_text = "Tidak diketahui (tidak ada pesan error di halaman)"
-            try:
-                error_msg_text = driver.find_element(By.CSS_SELECTOR, ".alert, .invalid-feedback, .error, .text-danger").text
-                log_proses(f"📩 Pesan error dari server: {error_msg_text}")
-            except:
-                log_proses("⚠️ Tidak ditemukan elemen pesan error di halaman.")
-            driver.save_screenshot(f"login_failed_{nama_akun}.png")
-            log_proses(f"📸 Screenshot: login_failed_{nama_akun}.png")
-            with open(f"login_failed_{nama_akun}.html", "w", encoding="utf-8") as f:
-                f.write(driver.page_source)
-            hasil_akun.append({"kelas": "-", "status": "gagal", "alasan": f"Login gagal: {error_msg_text}"})
-            return hasil_akun
-
-        log_proses("🎉 Login berhasil.")
-
-        # --- ABSEN ---
-        for cls in classes:
-            name = cls.get('name', 'Unknown')
-            link = cls.get('link', '')
-
-            if isinstance(name, list) and isinstance(link, list):
-                if len(name) != len(link):
-                    log_proses(f"⚠️ Jumlah nama ({len(name)}) tidak sama dengan jumlah link ({len(link)}), skip.")
-                    continue
-                for i in range(len(name)):
-                    nama_single = name[i]
-                    link_single = link[i]
-                    log_proses(f"\n📘 Mengakses Kelas: {nama_single}")
-                    log_proses(f"🔗 Buka link: {link_single}")
-                    driver.get(link_single)
-                    time.sleep(3)
-                    status, alasan = proses_absen(driver, wait, config, f"{nama_akun}_{nama_single}")
-                    hasil_akun.append({"kelas": nama_single, "status": status, "alasan": alasan})
-            else:
-                log_proses(f"\n📘 Mengakses Kelas: {name}")
-                log_proses(f"🔗 Buka link: {link}")
-                driver.get(link)
-                time.sleep(3)
-                status, alasan = proses_absen(driver, wait, config, f"{nama_akun}_{name}")
-                hasil_akun.append({"kelas": name, "status": status, "alasan": alasan})
-
-        log_proses(f"🎯 Selesai untuk akun: {nama_akun}")
-
-    except Exception as e:
-        log_proses(f"❌ Error umum untuk akun {nama_akun}: {e}")
-        driver.save_screenshot(f"error_{nama_akun}.png")
-        hasil_akun.append({"kelas": "-", "status": "gagal", "alasan": f"Error umum: {e}"})
-    finally:
-        ambil_screenshot(driver, nama_akun)
-        log_proses(f"🔌 Menutup browser untuk akun: {nama_akun}")
-        driver.quit()
-
-    return hasil_akun
-
-
-def main():
-    config = load_config()
-    timetable = config.get('timetable', {})
-    today = get_day_name()
-
-    hari_indonesia = {
-        'monday': 'Senin', 'tuesday': 'Selasa', 'wednesday': 'Rabu',
-        'thursday': 'Kamis', 'friday': 'Jumat', 'saturday': 'Sabtu',
-        'sunday': 'Minggu'
-    }
-    nama_hari = hari_indonesia.get(today, today)
-    log_proses(f"📅 Hari ini: {nama_hari}")
-
-    if today not in timetable:
-        log_proses("ℹ️ Tidak ada jadwal hari ini.")
-        kirim_discord(f"ℹ️ **{nama_hari}** — Tidak ada jadwal absen hari ini.")
+#ini tugas fathir (ubah pengembalian)
+def kembalikan_kendaraan():
+    """Logika pengembalian kendaraan"""
+    print("\n=== PENGEMBALIAN KENDARAAN ===")
+    # Buat DataFrame dari inventory
+    df = pds.DataFrame(inventory)
+    
+    # FILTER: Ambil hanya mobil yang 'tersedia' == False (Sedang Disewa)
+    df_sewa = df[df['tersedia'] == False].copy()
+    
+    # Cek jika tidak ada yang disewa
+    if df_sewa.empty:
+        print("[📌 INFO] Tidak ada mobil yang sedang disewa saat ini.")
         return
-
-    entry = timetable[today]
-    if isinstance(entry, dict):
-        classes = [entry]
-    elif isinstance(entry, list):
-        classes = entry
-    else:
-        log_proses("❌ Format jadwal tidak dikenali.")
-        return
-
-    # Dukung config lama (single akun) & config baru (banyak akun)
-    accounts = config.get('accounts')
-    if not accounts:
-        accounts = [{
-            "name": config.get('username', 'Akun'),
-            "username": config.get('username'),
-            "password": config.get('password')
-        }]
-
-    semua_hasil = {}  # {nama_akun: [ {kelas, status, alasan}, ... ]}
-    for account in accounts:
-        nama_akun = account.get('name', account.get('username', 'Akun'))
-        semua_hasil[nama_akun] = run_for_account(account, classes, config)
-
-    log_proses("\n🎯🎯 SEMUA AKUN SELESAI DIPROSES 🎯🎯")
-
-    # --- Bangun rekap & kirim ke Discord ---
-    waktu_sekarang = datetime.now(WIB).strftime("%d %b %Y, %H:%M")
-    baris = [f"📋 **Rekap Absen Otomatis** — {nama_hari}, {waktu_sekarang}"]
-
-    for nama_akun, daftar_kelas in semua_hasil.items():
-        baris.append(f"\n**{nama_akun}**")
-        if not daftar_kelas:
-            baris.append("  ⚠️ Tidak ada data (kemungkinan tidak ada jadwal / error sebelum absen)")
-            continue
-        garis = "-" * 61
-        for no, item in enumerate(daftar_kelas, start=1):
-            kelas = item["kelas"]
-            status = item["status"]
-            alasan = item["alasan"]
-            if status == "berhasil":
-                baris.append(f"  **{no}.** ✅ **`{kelas}`** — *Berhasil absen*")
-            elif status == "sudah_absen":
-                baris.append(f"  **{no}.** ✅ **`{kelas}`** — *Sudah absen sebelumnya*")
-            elif status == "belum_waktunya":
-                baris.append(f"  **{no}.** ⏳ **`{kelas}`** — *{alasan}*")
-            elif status == "tidak_terverifikasi":
-                baris.append(f"  **{no}.** ⚠️ **`{kelas}`** — Klik terkirim tapi TIDAK terverifikasi. Alasan: *{alasan}*")
-            else:  # gagal
-                baris.append(f"  **{no}.** ❌ **`{kelas}`** — Gagal. Alasan: *{alasan}*")
-            if no < len(daftar_kelas):
-                baris.append(garis)
-
-    pesan_akhir = "\n".join(baris)
-    kirim_discord(pesan_akhir)
-
-    # --- Kirim screenshot tiap akun (urut sesuai daftar akun) ---
-    for nama_akun in semua_hasil.keys():
-        path_ss = SCREENSHOTS.get(nama_akun)
-        if path_ss and os.path.exists(path_ss):
-            time.sleep(1)  # jeda kecil biar tidak kena rate limit webhook
-            kirim_discord_file(f"📸 **Screenshot akun {nama_akun}**", path_ss)
-        else:
-            log_proses(f"⚠️ Tidak ada screenshot untuk akun {nama_akun}")
-
-    # --- Kirim SATU gambar status gabungan (dari semua kelas semua akun) ---
-    time.sleep(1)
-    kirim_gambar_status_gabungan(semua_hasil)
-
-
-def proses_absen(driver, wait, config, nama_kelas):
-    """Fungsi untuk menangani absen satu kelas (dipanggil per link).
-    Return: (status, alasan)
-    status salah satu dari: 'sudah_absen', 'belum_waktunya', 'berhasil',
-                            'tidak_terverifikasi', 'gagal'
-    """
+    
+    # Tambahkan kolom status teks manual (opsional, biar jelas)
+    df_sewa['Status Keterangan'] = "Sedang Disewa"
+    
+    # Pilih kolom yang mau ditampilkan
+    df_tampil = df_sewa[['id', 'nama', 'Status Keterangan']]
+    df_tampil.columns = ['ID', 'Nama Kendaraan', 'Status']
+    
+    # Tampilkan dengan Tabulate
+    print(tabulate(df_tampil, headers='keys', tablefmt='fancy_grid', showindex=False, stralign="left"))
+    
+    print("-" * 40)
+    
     try:
-        page_text = driver.page_source.lower()
+        # INPUT ID KENDARAAN
+        id_kembali = int(input("Masukkan ID kendaraan yang dikembalikan: "))
+        
+        # Cari data kendaraan
+        mobil_target = None
+        for mobil in inventory:
+            if mobil['id'] == id_kembali:
+                mobil_target = mobil
+                break
+        
+        if not mobil_target:
+            print("[⚠️  ERROR] ID Kendaraan tidak ditemukan.")
+            return
 
-        if 'action="/komentar-mhs"' in page_text or "berikan komentar anda" in page_text:
-            log_proses("✅ Status: Anda SUDAH ABSEN di kelas ini (Form komentar/rating ditemukan).")
-            return "sudah_absen", "Form komentar/rating sudah muncul sebelum diproses"
+        # Cek apakah mobil memang sedang disewa
+        if mobil_target['tersedia']:
+            print("[📌 INFO] Mobil ini statusnya masih tersedia di garasi (belum disewa).")
+            return
 
-        elif "sudah selesai" in page_text:
-            log_proses("⏳ Status: Waktu kelas Sudah Selesai, tidak bisa absen.")
-            return "belum_waktunya", "Waktu kelas sudah selesai"
-        elif "belum mulai" in page_text:
-            log_proses("⏳ Status: Kelas Belum Mulai, belum waktunya absen.")
-            return "belum_waktunya", "Kelas belum mulai"
+        # --- LOGIKA OTOMATIS MENCARI DATA TRANSAKSI ---
+        # cari di riwayat Transaksi yang id mobilnya cocok dan statusnya masih 'aktif'
+        transaksi_aktif = None
+        for trx in riwayat_transaksi:
+            if trx['id_mobil'] == id_kembali and trx['status_rental'] == 'aktif':
+                transaksi_aktif = trx
+                break
+        
+        if not transaksi_aktif:
+            print("[⚠️  ERROR] Data transaksi aktif tidak ditemukan (Mungkin sistem error).")
+            return
 
+        # --- TAMPILKAN DATA SEWA ---
+        print("\n" + "="*40)
+        print("DATA PENYEWA DITEMUKAN")
+        print("="*40)
+        print(f"Penyewa       : {transaksi_aktif['penyewa']}")
+        print(f"Kendaraan     : {transaksi_aktif['mobil']}")
+        print(f"Lama Sewa     : {transaksi_aktif['lama']} hari")
+        print(f"Total Awal    : Rp {transaksi_aktif['total']:,}")
+        print("-" * 40)
+
+        # --- INPUT KETERLAMBATAN & HITUNG DENDA ---
+        telat = int(input("Keterlambatan (hari, tulis 0 jika tepat waktu): "))
+        
+        denda = 0
+        if telat > 0:
+            # Denda 10% dari total biaya per hari telat
+            denda_per_hari = 0.10 * transaksi_aktif['total']
+            denda = denda_per_hari * telat
+            print(f"\n[📌 INFO] Terlambat {telat} hari.")
+            print(f"Denda (10% x Total x Hari): Rp {denda:,.0f}")
         else:
-            log_proses("🔍 Mencari tombol absen...")
-            clicked = False
-            try:
-                try:
-                    attend_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(),'Absen Masuk')]")))
-                except:
-                    attend_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(),'Absen')]")))
-                attend_btn.click()
-                log_proses("🖱️ Tombol 'Absen' utama diklik, memverifikasi...")
-                clicked = True
-            except Exception as e:
-                log_proses("⚠️ Tombol absen teks tidak ditemukan, mencoba metode locator cadangan...")
-                try:
-                    attend_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, config['attend_locator']['ready'])))
-                    attend_btn.click()
-                    log_proses("🖱️ Tombol absen (locator ready) diklik, memverifikasi...")
-                    clicked = True
-                except:
-                    try:
-                        attend_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, config['attend_locator']['not_ready'])))
-                        attend_btn.click()
-                        log_proses("🖱️ Tombol absen (locator not_ready) diklik, memverifikasi...")
-                        clicked = True
-                    except Exception as e2:
-                        log_proses("❌ Gagal menemukan semua jenis tombol absen.")
-                        driver.save_screenshot(f"screenshot_{nama_kelas}.png")
-                        log_proses(f"📸 Screenshot tersimpan: screenshot_{nama_kelas}.png")
+            print("\n[📌 INFO] Pengembalian tepat waktu. Tidak ada denda.")
 
-            if not clicked:
-                return "gagal", "Tidak menemukan tombol absen jenis apapun"
+        total_akhir = transaksi_aktif['total'] + denda
 
-            # --- VERIFIKASI ULANG: pastikan status BENAR-BENAR berubah ---
-            time.sleep(3)
-            driver.refresh()
-            time.sleep(3)
-            page_text_after = driver.page_source.lower()
-            if 'action="/komentar-mhs"' in page_text_after or "berikan komentar anda" in page_text_after:
-                log_proses("✅ TERVERIFIKASI: Absen berhasil tercatat di server.")
-                return "berhasil", "Terverifikasi setelah refresh"
-            else:
-                log_proses("⚠️ PERINGATAN: Tombol sempat diklik, TAPI status belum berubah jadi 'sudah absen' setelah refresh.")
-                log_proses("⚠️ Kemungkinan penyebab: sesi akun sedang dipakai login manual di tempat lain (single-session), atau klik mengenai tombol yang salah.")
-                driver.save_screenshot(f"unverified_{nama_kelas}.png")
-                log_proses(f"📸 Screenshot kondisi setelah klik: unverified_{nama_kelas}.png")
-                return "tidak_terverifikasi", "Status belum berubah setelah refresh (kemungkinan sesi bentrok / tombol salah)"
+        print("=" * 40)
+        print(f"TOTAL YANG HARUS DIBAYAR: Rp {total_akhir:,.0f}")
+        print("=" * 40)
 
-    except Exception as e:
-        log_proses(f"❌ Error saat memproses halaman absen {nama_kelas}: {e}")
-        return "gagal", f"Error: {e}"
+        # --- KONFIRMASI AKHIR ---
+        konfirmasi = input("\nProses pengembalian & pembayaran? (y/n): ").lower()
+        
+        if konfirmasi == 'y':
+            # Update status mobil jadi tersedia
+            mobil_target['tersedia'] = True
+            
+            # Update status transaksi jadi selesai (biar tidak muncul lagi nanti)
+            transaksi_aktif['status_rental'] = 'selesai'
+            transaksi_aktif['denda_akhir'] = denda
+            transaksi_aktif['total_akhir'] = total_akhir
+            
+            print("\n[✅  SUKSES] Mobil telah dikembalikan dan status menjadi TERSEDIA. ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧")
+        else:
+            print("\n[❌  BATAL] Pengembalian dibatalkan.")
+
+    except ValueError:
+        print("\n[⚠️  ERROR] Masukkan angka yang valid!")
+
+def menu_utama():
+    """Menampilkan menu utama"""
+    while True:
+        print ()
+        print("      ✨ Welcome ✨ ")
+        print("="*25)
+        print("SISTEM RENTAL MOBIL")
+        print("="*25)
+        print("1. Lihat Daftar Kendaraan")
+        print("2. Sewa Kendaraan")
+        print("3. Kembalikan Kendaraan")
+        print("4. Riwayat Transaksi")
+        print("5. Keluar")
+        
+        pilihan = input("\nPilih menu (1-5): ")
+        
+        if pilihan == '1':
+            clear_screen()
+            tampilkan_kendaraan()
+        elif pilihan == '2':
+            clear_screen()
+            sewa_kendaraan()
+        elif pilihan == '3':
+            clear_screen()
+            kembalikan_kendaraan()
+        elif pilihan == '4':
+            clear_screen()
+            lihat_riwayat()
+        elif pilihan == '5':
+            print("\nTerima kasih telah menggunakan sistem rental kami! (˶ᵔ ᵕ ᵔ˶)")
+            break
+        else:
+            clear_screen()
+            print("\n⚠️  Pilihan tidak valid, silakan coba lagi.")
 
 
-if __name__ == '__main__':
-    main()
+menu_utama()
